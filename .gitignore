@@ -1,0 +1,64 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*.pyc
+*.pyo
+*.pyd
+*.so
+
+# Django migrations (keep __init__.py, ignore others)
+weather_app/migrations/*.py
+!weather_app/migrations/__init__.py
+
+# Management command cache
+weather_app/management/commands/__pycache__/
+
+# Environment & secrets
+.env
+.env.*
+*.env
+*.secret
+*.key
+
+
+# Celery and runtime files
+celerybeat-schedule
+*.pid
+
+# Media/static (if generated at runtime)
+media/
+staticfiles/
+
+# VSCode, PyCharm, and other IDEs
+.vscode/
+.idea/
+
+# macOS and Windows system files
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Redis Insight, Docker,
+.redis-insight/
+.docker/
+
+# Editor swap files
+*.swp
+*.swo
+
+# Python virtual environments
+.venv/
+venv/
+ENV/
+env/
+env.bak/
+venv.bak/
+
+# Excalidraw and other design files (if not needed in repo)
+*.excalidraw
+
+# Ignore Windows shortcuts
+*.lnk
+
+*.log

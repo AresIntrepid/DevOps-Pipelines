@@ -1,0 +1,562 @@
+<!-- Django template for weather app frontend -->
+<!-- Save this as: weather_app/templates/weather_app/index.html -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather App Demo</title>
+    <style>
+        /* CSS Reset - Remove default browser styling */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box; /* Include padding/border in element width */
+        }
+
+        /* Body styling - main page background and layout */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            /* Create gradient background from purple to blue */
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            min-height: 100vh; /* Full viewport height minimum */
+            padding: 20px;
+            color: white;
+        }
+
+        /* Main container to center and limit content width */
+        .container {
+            max-width: 1200px; /* Don't exceed 1200px wide */
+            margin: 0 auto;    /* Center horizontally */
+        }
+
+        /* Main heading styling */
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            /* Add shadow effect to text */
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        /* Container for Cupertino weather (default display) */
+        .default-weather {
+            /* Semi-transparent white background */
+            background: rgba(255, 255, 255, 0.1);
+            /* Blur effect for glassmorphism look */
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 30px;
+            padding-top: 10px;
+            margin-bottom: 30px;
+            text-align: center;
+            /* Subtle border for definition */
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        /* Cupertino section heading */
+        .default-weather h2 {
+            margin-bottom: 20px;
+            color: #f1c40f; /* Yellow color for emphasis */
+        }
+
+        /* Container for the random weather button */
+        .controls {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        /* Styling for the main action button */
+        #randomBtn {
+            /* Gradient background from red to orange */
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 18px;
+            border-radius: 25px; /* Rounded corners */
+            cursor: pointer;
+            /* Glowing shadow effect */
+            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.4);
+            /* Smooth transitions for hover effects */
+            transition: all 0.3s ease;
+        }
+
+        /* Button hover effect */
+        #randomBtn:hover {
+            /* Lift button up slightly */
+            transform: translateY(-2px);
+            /* Increase glow effect */
+            box-shadow: 0 6px 20px rgba(255, 107, 107, 0.6);
+        }
+
+        /* Button disabled state (when loading) */
+        #randomBtn:disabled {
+            background: #95a5a6; /* Gray background */
+            cursor: not-allowed;  /* Show disabled cursor */
+            transform: none;      /* Remove hover effects */
+            box-shadow: none;
+        }
+
+        /* Grid layout for displaying multiple weather cards */
+        .weather-grid {
+            /* Responsive grid: minimum 300px per column, auto-fit columns */
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;        /* Space between grid items */
+            margin-top: 30px;
+        }
+
+        /* Individual weather card styling */
+        .weather-card {
+            /* Semi-transparent glassmorphism effect */
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            /* Smooth animation when card appears/changes */
+            transition: transform 0.3s ease;
+        }
+
+        /* Weather card hover effect */
+        .weather-card:hover {
+            /* Lift card slightly on hover */
+            transform: translateY(-5px);
+        }
+
+        /* Special styling for error cards */
+        .weather-card.error {
+            /* Red-tinted background for errors */
+            background: rgba(231, 76, 60, 0.2);
+            border-color: rgba(231, 76, 60, 0.4);
+        }
+
+        /* City name styling within cards */
+        .city-name {
+            font-size: 1.4em;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #f39c12; /* Orange color for city names */
+        }
+
+        /* Large temperature display */
+        .temperature {
+            font-size: 3em;
+            font-weight: bold;
+            margin: 15px 0;
+        }
+
+        /* Weather description text */
+        .description {
+            font-size: 1.1em;
+            margin-bottom: 20px;
+            text-transform: capitalize; /* Capitalize first letter of each word */
+            color: #ecf0f1; /* Light gray color */
+        }
+
+        /* Grid for detailed weather information */
+        .weather-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr; /* Two equal columns */
+            gap: 10px;
+            font-size: 0.9em;
+        }
+
+        /* Individual detail items (humidity, pressure, etc.) */
+        .detail-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px;
+            border-radius: 8px;
+        }
+
+        /* Labels for detail items */
+        .detail-label {
+            opacity: 0.8;      /* Slightly transparent for subtle look */
+            margin-bottom: 5px;
+        }
+
+        /* Values for detail items */
+        .detail-value {
+            font-weight: bold;
+        }
+
+        /* Weather icon styling */
+        .weather-icon {
+            width: 60px;
+            height: 60px;
+            margin: 0 auto 10px; /* Center horizontally, margin below */
+        }
+
+        /* Loading indicator styling */
+        .loading {
+            text-align: center;
+            font-size: 1.2em;
+            color: #f1c40f; /* Yellow color */
+            margin: 20px 0;
+        }
+
+        /* Timestamp styling */
+        .timestamp {
+            font-size: 0.8em;
+            opacity: 0.7;     /* Make it subtle */
+            margin-top: 15px;
+        }
+
+        /* Error message text styling */
+        .error-text {
+            color: #e74c3c;   /* Red color for errors */
+            font-weight: bold;
+        }
+
+        /* Fade-in animation for smooth appearance */
+        @keyframes fadeIn {
+            from { 
+                opacity: 0; 
+                transform: translateY(20px); /* Start slightly below */
+            }
+            to { 
+                opacity: 1; 
+                transform: translateY(0);    /* End in normal position */
+            }
+        }
+
+        /* Class to apply fade-in animation */
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        /* Cache and rate limiting indicators */
+        .cache-indicator {
+            font-size: 0.8em;
+            color: #2ecc71;
+            margin-bottom: 10px;
+            padding: 5px 10px;
+            background: rgba(46, 204, 113, 0.2);
+            border-radius: 15px;
+            display: inline-block;
+        }
+
+        .rate-limit-info {
+            font-size: 0.8em;
+            color: #f39c12;
+            margin-bottom: 15px;
+            padding: 5px 10px;
+            background: rgba(243, 156, 18, 0.2);
+            border-radius: 10px;
+        }
+
+        .rate-limit-warning {
+            color: #e74c3c;
+            font-weight: bold;
+            margin-top: 10px;
+            padding: 10px;
+            background: rgba(231, 76, 60, 0.2);
+            border-radius: 10px;
+        }
+
+        .cache-stats {
+            background: rgba(52, 152, 219, 0.1);
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 20px;
+            font-size: 0.9em;
+        }
+
+        .cache-stats h3 {
+            color: #3498db;
+            margin-bottom: 10px;
+        }
+
+
+      </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Main page heading -->
+        <h1>Weather App Demo</h1>
+        
+        <!-- Section showing default Cupertino weather -->
+        <div class="default-weather">
+            <h2></h2>
+            
+            <!-- Rate limiting info -->
+            {% if default_weather.rate_limit_info %}
+            <div class="rate-limit-info">
+                <small>📊 Requests: {{ default_weather.rate_limit_info.requests_made }}/10 this minute | 
+                {{ default_weather.rate_limit_info.requests_remaining }} remaining</small>
+            </div>
+            {% endif %}
+            
+            <!-- Django template conditional: check if there's an error -->
+            {% if default_weather.error %}
+                <!-- Show error message if weather fetch failed -->
+                <div class="error-text">{{ default_weather.error }}</div>
+                {% if default_weather.rate_limited %}
+                    <div class="rate-limit-warning">⏱️ Please wait before making another request</div>
+                {% endif %}
+            {% else %}
+                <!-- Show weather data if fetch was successful -->
+                <div class="weather-card">
+                    <!-- Cache indicator -->
+                    {% if default_weather.from_cache %}
+                        <div class="cache-indicator"> From Cache ({{ default_weather.cache_timestamp }})</div>
+                    {% else %}
+                        <div class="cache-indicator"> Fresh from API</div>
+                    {% endif %}
+                    
+                    <!-- Display city name and country -->
+                    <div class="city-name">{{ default_weather.city }}, {{ default_weather.country }}</div>
+                    
+                    <!-- Show weather icon if available -->
+                    {% if default_weather.icon %}
+                        <img class="weather-icon" src="{{ default_weather.icon }}" alt="Weather Icon">
+                    {% endif %}
+                    
+                    <!-- Main temperature display -->
+                    <div class="temperature">{{ default_weather.temperature }}°C</div>
+                    
+                    <!-- Weather description -->
+                    <div class="description">{{ default_weather.description }}</div>
+                    
+                    <!-- Grid of detailed weather information -->
+                    <div class="weather-details">
+                        <div class="detail-item">
+                            <div class="detail-label">Feels Like</div>
+                            <div class="detail-value">{{ default_weather.feels_like }}°C</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Humidity</div>
+                            <div class="detail-value">{{ default_weather.humidity }}%</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Wind Speed</div>
+                            <div class="detail-value">{{ default_weather.wind_speed }} m/s</div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-label">Pressure</div>
+                            <div class="detail-value">{{ default_weather.pressure }} hPa</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Show when this data was fetched -->
+                    <div class="timestamp">Last updated: {{ default_weather.timestamp }}</div>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Button to fetch random cities weather -->
+        <div class="controls">
+            <button id="randomBtn">Get 4 Random Cities Weather</button>
+        </div>
+
+        <!-- Loading indicator (hidden by default) -->
+        <div class="loading" id="loading" style="display: none;">
+             Fetching weather data for random cities...
+        </div>
+
+        <!-- Container where random cities weather will be displayed -->
+        <div class="weather-grid" id="weatherGrid"></div>
+    </div>
+
+    <script>
+        // Get references to HTML elements we'll manipulate
+        const randomBtn = document.getElementById('randomBtn');       // The button
+        const loading = document.getElementById('loading');           // Loading indicator
+        const weatherGrid = document.getElementById('weatherGrid');   // Weather cards container
+
+        /**
+         * Fetch weather data for 4 random cities from our Django API
+         * This function is called when the button is clicked
+         */
+        async function getRandomWeather() {
+            // Disable button to prevent multiple rapid clicks
+            randomBtn.disabled = true;
+            
+            // Show loading indicator
+            loading.style.display = 'block';
+            
+            // Clear any existing weather cards
+            weatherGrid.innerHTML = '';
+
+            try {
+                // Make POST request to our Django API endpoint
+                const response = await fetch('/random-weather/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        // Include CSRF token for Django security
+                        'X-CSRFToken': getCookie('csrftoken')
+                    }
+                    // No body needed - Django will generate random cities
+                });
+
+                // Parse JSON response from server
+                const data = await response.json();
+                
+                // Hide loading indicator
+                loading.style.display = 'none';
+
+                // Check if we got weather data successfully
+                if (data.cities) {
+                    // Display the weather data for all cities
+                    displayWeatherData(data.cities);
+                    
+                    // Show cache statistics if available
+                    if (data.cache_stats) {
+                        displayCacheStats(data.cache_stats);
+                    }
+                    
+                    // Show rate limit info if available
+                    if (data.rate_limit_info) {
+                        console.log(`Rate limit: ${data.rate_limit_info.requests_made}/10 requests used`);
+                    }
+                } else if (data.rate_limited) {
+                    // Handle rate limiting
+                    weatherGrid.innerHTML = `
+                        <div class="weather-card error">
+                            <div class="error-text">${data.error}</div>
+                            <div class="rate-limit-warning">Please wait ${data.time_until_reset} seconds</div>
+                        </div>
+                    `;
+                } else {
+                    // Show error message if no data received
+                    weatherGrid.innerHTML = '<div class="weather-card error"><div class="error-text">Failed to fetch random weather data</div></div>';
+                }
+            } catch (error) {
+                // Handle network errors or other exceptions
+                loading.style.display = 'none';
+                weatherGrid.innerHTML = '<div class="weather-card error"><div class="error-text">Network error. Please try again.</div></div>';
+            } finally {
+                // Always re-enable the button when done
+                randomBtn.disabled = false;
+            }
+        }
+
+        /**
+         * Create and display weather cards for an array of cities
+         * @param {Array} cities - Array of weather data objects
+         */
+        function displayWeatherData(cities) {
+            // Clear existing content
+            weatherGrid.innerHTML = '';
+            
+            // Create a weather card for each city
+            cities.forEach((weather, index) => {
+                // Create new div element for the weather card
+                const card = document.createElement('div');
+                card.className = 'weather-card fade-in';
+                
+                // Stagger animation timing for visual effect
+                card.style.animationDelay = `${index * 0.1}s`;
+
+                // Check if this city had an error
+                if (weather.error) {
+                    // Add error styling and show error message
+                    card.classList.add('error');
+                    card.innerHTML = `
+                        <div class="city-name">Error</div>
+                        <div class="error-text">${weather.error}</div>
+                    `;
+                } else {
+                    // Create full weather card with all data
+                    card.innerHTML = `
+                        ${weather.from_cache ? 
+                            '<div class="cache-indicator">⚡ From Cache</div>' : 
+                            '<div class="cache-indicator">🌐 Fresh from API</div>'
+                        }
+                        <div class="city-name">${weather.city}, ${weather.country}</div>
+                        <img class="weather-icon" src="${weather.icon}" alt="Weather Icon">
+                        <div class="temperature">${weather.temperature}°C</div>
+                        <div class="description">${weather.description}</div>
+                        
+                        <div class="weather-details">
+                            <div class="detail-item">
+                                <div class="detail-label">Feels Like</div>
+                                <div class="detail-value">${weather.feels_like}°C</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">Humidity</div>
+                                <div class="detail-value">${weather.humidity}%</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">Wind Speed</div>
+                                <div class="detail-value">${weather.wind_speed} m/s</div>
+                            </div>
+                            <div class="detail-item">
+                                <div class="detail-label">Pressure</div>
+                                <div class="detail-value">${weather.pressure} hPa</div>
+                            </div>
+                        </div>
+                        
+                        <div class="timestamp">Fetched at: ${weather.timestamp}</div>
+                    `;
+                }
+
+                // Add the completed card to the grid
+                weatherGrid.appendChild(card);
+            });
+        }
+
+        /**
+         * Display cache statistics
+         * @param {Object} stats - Cache statistics object
+         */
+        function displayCacheStats(stats) {
+            // Create or update cache stats display
+            let cacheStatsDiv = document.getElementById('cacheStats');
+            if (!cacheStatsDiv) {
+                cacheStatsDiv = document.createElement('div');
+                cacheStatsDiv.id = 'cacheStats';
+                cacheStatsDiv.className = 'cache-stats';
+                weatherGrid.parentNode.insertBefore(cacheStatsDiv, weatherGrid.nextSibling);
+            }
+
+            cacheStatsDiv.innerHTML = `
+                <h3>📊 Cache Statistics (Today)</h3>
+                <div>Cache Hits: ${stats.hits}</div>
+                <div>Cache Misses: ${stats.misses}</div>
+                <div>Total Requests: ${stats.total}</div>
+                <div>Hit Rate: ${stats.hit_rate}%</div>
+            `;
+        }
+
+        /**
+         * Get CSRF token from Django cookies
+         * Django requires this token for POST requests as security measure
+         * @param {string} name - Name of the cookie to retrieve
+         * @returns {string|null} - Cookie value or null if not found
+         */
+        function getCookie(name) {
+            let cookieValue = null;
+            // Check if cookies exist
+            if (document.cookie && document.cookie !== '') {
+                // Split cookies by semicolon
+                const cookies = document.cookie.split(';');
+                // Look for the specific cookie
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    // Check if this cookie starts with our desired name
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        // Extract and decode the cookie value
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        // Event listener: when button is clicked, call getRandomWeather function
+        randomBtn.addEventListener('click', getRandomWeather);
+
+        // Optional: Auto-refresh Cupertino weather every 5 minutes
+        // This reloads the entire page to get fresh default weather data
+        setInterval(() => {
+            location.reload();
+        }, 5 * 60 * 1000); // 5 minutes in milliseconds
+    </script>
+</body>
+</html>

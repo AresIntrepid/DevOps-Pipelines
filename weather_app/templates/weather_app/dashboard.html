@@ -1,0 +1,292 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Weather App Monitoring Dashboard</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        table { border-collapse: collapse; width: 100%; margin: 20px 0; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        .status-online { color: green; font-weight: bold; }
+        .status-error { color: red; font-weight: bold; }
+        .status-warning { color: orange; font-weight: bold; }
+        .refresh-btn { background: #007cba; color: white; padding: 10px 20px; border: none; cursor: pointer; }
+        .section { margin: 30px 0; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; }
+        .card { border: 1px solid #ddd; padding: 15px; border-radius: 5px; }
+        .metric { font-size: 2em; font-weight: bold; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <h1>Weather App Monitoring Dashboard</h1>
+    
+    <button class="refresh-btn" onclick="refreshData()">🔄 Refresh Data</button>
+    <p>Last updated: <span id="last-updated">Loading...</span></p>
+    <p>Auto-refresh: <span id="auto-refresh-status">Enabled (30s)</span></p>
+    
+    <!-- Real-time Stats -->
+    <div class="section">
+        <h2>Today's Statistics</h2>
+        <div class="grid">
+            <div class="card">
+                <h3>Messages Sent</h3>
+                <div class="metric" id="messages-sent">0</div>
+            </div>
+            <div class="card">
+                <h3>Messages Queued</h3>
+                <div class="metric" id="messages-queued">0</div>
+            </div>
+            <div class="card">
+                <h3>Failed Messages</h3>
+                <div class="metric" id="messages-failed">0</div>
+            </div>
+            <div class="card">
+                <h3>Active Workers</h3>
+                <div class="metric" id="active-workers">0</div>
+            </div>
+            <div class="card">
+                <h3>Total Users</h3>
+                <div class="metric" id="total-users">0</div>
+            </div>
+            <div class="card">
+                <h3>Locations Monitored</h3>
+                <div class="metric" id="total-locations">0</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- System Health -->
+    <div class="section">
+        <h2>System Health</h2>
+        <table>
+            <tr>
+                <th>Component</th>
+                <th>Status</th>
+                <th>Details</th>
+            </tr>
+            <tbody id="system-health">
+                <tr><td colspan="3">Loading...</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Worker Status -->
+    <div class="section">
+        <h2>Celery Workers</h2>
+        <table>
+            <tr>
+                <th>Worker Name</th>
+                <th>Status</th>
+                <th>Active Tasks</th>
+                <th>Pool Type</th>
+                <th>Last Seen</th>
+            </tr>
+            <tbody id="worker-status">
+                <tr><td colspan="5">Loading...</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Queue Status -->
+    <div class="section">
+        <h2>📋 Queue Status</h2>
+        <table>
+            <tr>
+                <th>Queue Name</th>
+                <th>Processing</th>
+                <th>Scheduled</th>
+                <th>Failed/Dead</th>
+                <th>Status</th>
+            </tr>
+            <tbody id="queue-status">
+                <tr><td colspan="5">Loading...</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="section">
+        <h2>Recent Activity</h2>
+        <table>
+            <tr>
+                <th>Time</th>
+                <th>Type</th>
+                <th>Action</th>
+                <th>Status</th>
+            </tr>
+            <tbody id="recent-activity">
+                <tr><td colspan="4">Loading...</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Recent Messages -->
+    <div class="section">
+        <h2>Recent Email Messages</h2>
+        <table>
+            <tr>
+                <th>Time</th>
+                <th>User</th>
+                <th>Type</th>
+                <th>Temperature</th>
+                <th>Location</th>
+                <th>Status</th>
+                <th>Priority</th>
+            </tr>
+            <tbody id="recent-messages">
+                <tr><td colspan="7">Loading...</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Failed Messages -->
+    <div class="section">
+        <h2>Failed Messages</h2>
+        <table>
+            <tr>
+                <th>Time</th>
+                <th>User</th>
+                <th>Email</th>
+                <th>Error</th>
+                <th>Retry Count</th>
+                <th>Action</th>
+            </tr>
+            <tbody id="failed-messages">
+                <tr><td colspan="6">Loading...</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        function refreshData() {
+            document.getElementById('last-updated').textContent = new Date().toLocaleTimeString();
+            
+            fetch('/api/dashboard-stats/')
+                .then(response => response.json())
+                .then(data => {
+                    // Update stats cards
+                    document.getElementById('messages-sent').textContent = data.messages_sent;
+                    document.getElementById('messages-queued').textContent = data.messages_queued;
+                    document.getElementById('messages-failed').textContent = data.messages_failed;
+                    document.getElementById('active-workers').textContent = data.active_workers;
+                    document.getElementById('total-users').textContent = data.total_users;
+                    document.getElementById('total-locations').textContent = data.total_locations;
+                    
+                    // Update system health
+                    const healthTable = document.getElementById('system-health');
+                    healthTable.innerHTML = Object.entries(data.system_health).map(([component, status]) => {
+                        const statusClass = status.includes('Connected') || status.includes('Active') ? 'status-online' : 
+                                          status.includes('Error') || status.includes('No Workers') ? 'status-error' : 'status-warning';
+                        return `
+                            <tr>
+                                <td>${component.replace('_', ' ').toUpperCase()}</td>
+                                <td class="${statusClass}">${status}</td>
+                                <td>Automatically monitored</td>
+                            </tr>
+                        `;
+                    }).join('');
+                    
+                    // Update workers
+                    const workerTable = document.getElementById('worker-status');
+                    if (data.worker_details && data.worker_details.length > 0) {
+                        workerTable.innerHTML = data.worker_details.map(worker => `
+                            <tr>
+                                <td>${worker.name}</td>
+                                <td class="status-online">${worker.status}</td>
+                                <td>${worker.active_tasks}</td>
+                                <td>${worker.pool}</td>
+                                <td>${worker.last_seen}</td>
+                            </tr>
+                        `).join('');
+                    } else {
+                        workerTable.innerHTML = '<tr><td colspan="5">No workers active</td></tr>';
+                    }
+                    
+                    // Update queues
+                    const queueTable = document.getElementById('queue-status');
+                    queueTable.innerHTML = Object.entries(data.queue_details).map(([queueName, stats]) => {
+                        const status = stats.processing > 0 ? 'Processing' : stats.scheduled > 0 ? 'Scheduled' : 'Idle';
+                        return `
+                            <tr>
+                                <td>${queueName.replace('_', ' ')}</td>
+                                <td>${stats.processing}</td>
+                                <td>${stats.scheduled}</td>
+                                <td>${stats.pending}</td>
+                                <td>${status}</td>
+                            </tr>
+                        `;
+                    }).join('');
+                    
+                    // Update recent activity
+                    const activityTable = document.getElementById('recent-activity');
+                    if (data.recent_activity && data.recent_activity.length > 0) {
+                        activityTable.innerHTML = data.recent_activity.map(activity => `
+                            <tr>
+                                <td>${activity.time}</td>
+                                <td>${activity.type}</td>
+                                <td>${activity.action}</td>
+                                <td>${activity.status}</td>
+                            </tr>
+                        `).join('');
+                    } else {
+                        activityTable.innerHTML = '<tr><td colspan="4">No recent activity</td></tr>';
+                    }
+                    
+                    // Update recent messages
+                    const recentTable = document.getElementById('recent-messages');
+                    if (data.recent_messages && data.recent_messages.length > 0) {
+                        recentTable.innerHTML = data.recent_messages.map(msg => `
+                            <tr>
+                                <td>${msg.timestamp}</td>
+                                <td>${msg.user_id}</td>
+                                <td>${msg.message_type}</td>
+                                <td>${msg.temperature}°C</td>
+                                <td>${msg.location}</td>
+                                <td>${msg.delivery_status}</td>
+                                <td>${msg.priority}</td>
+                            </tr>
+                        `).join('');
+                    } else {
+                        recentTable.innerHTML = '<tr><td colspan="7">No recent messages</td></tr>';
+                    }
+                    
+                    // Update failed messages
+                    const failedTable = document.getElementById('failed-messages');
+                    if (data.failed_messages && data.failed_messages.length > 0) {
+                        failedTable.innerHTML = data.failed_messages.map(msg => `
+                            <tr>
+                                <td>${msg.timestamp}</td>
+                                <td>${msg.user_id}</td>
+                                <td>${msg.email}</td>
+                                <td>${msg.error}</td>
+                                <td>${msg.retry_count}</td>
+                                <td><button onclick="retryMessage(${msg.id})">Retry</button></td>
+                            </tr>
+                        `).join('');
+                    } else {
+                        failedTable.innerHTML = '<tr><td colspan="6">No failed messages</td></tr>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching dashboard data:', error);
+                    document.getElementById('last-updated').textContent = 'Error loading data';
+                });
+        }
+
+        function retryMessage(messageId) {
+            console.log('Retrying message:', messageId);
+            // You can implement retry logic here
+        }
+
+        // Auto-refresh every 30 seconds
+        setInterval(refreshData, 30000);
+        
+        // Initial load
+        refreshData();
+    </script>
+</body>
+</html>
+
+
+
