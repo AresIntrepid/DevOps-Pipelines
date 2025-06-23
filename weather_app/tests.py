@@ -1,36 +1,7 @@
-import os
-import django
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'weather_project.settings')
-django.setup()
-
-from django.core.mail import send_mail
-from django.conf import settings
-
-# Create your tests here.
-
-def test_email_sending():
-    """Test if email sending works"""
-    try:
-        send_mail(
-            subject='Test Email',
-            message='This is a test email',
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=['neilk0832@gmail.com'],
-            fail_silently=False,
-        )
-        print("Email sent successfully!")
-    except Exception as e:
-        print(f"Email sending failed: {str(e)}")
-
-if __name__ == '__main__':
-    test_email_sending()
-
-
-
 # weather_app/tests.py
 from django.test import TestCase, Client
 from django.contrib.auth.models import User
-from django.urls import reverse
+from unittest.mock import patch, MagicMock
 from .models import EmailMessage, CeleryWeatherRequest
 from .email_client import EmailAPI
 
@@ -43,8 +14,25 @@ class WeatherAppTestCase(TestCase):
             password='testpass123'
         )
 
-    def test_index_view(self):
-        """Test the main weather page loads"""
+    @patch('weather_app.views.requests.get')
+    def test_index_view(self, mock_requests):
+        """Test the main weather page loads - mocking external weather API"""
+        # Mock the weather API response
+        mock_response = MagicMock()
+        mock_response.raise_for_status.return_value = None
+        mock_response.json.return_value = {
+            'location': {'name': 'Cupertino', 'country': 'USA'},
+            'current': {
+                'temp_c': 22,
+                'feelslike_c': 24,
+                'condition': {'text': 'Sunny', 'icon': '//cdn.weatherapi.com/weather/64x64/day/113.png'},
+                'humidity': 65,
+                'pressure_mb': 1013,
+                'wind_kph': 10
+            }
+        }
+        mock_requests.return_value = mock_response
+        
         response = self.client.get('/')
         self.assertEqual(response.status_code, 200)
 
@@ -72,7 +60,7 @@ class WeatherAppTestCase(TestCase):
         self.assertEqual(message.temperature, 25.0)
 
     def test_celery_weather_request_creation(self):
-        """Test CeleryWeatherRequest model""" 
+        """Test CeleryWeatherRequest model"""
         request = CeleryWeatherRequest.objects.create(
             user=self.user,
             location='Test City',
@@ -87,4 +75,54 @@ class EmailClientTestCase(TestCase):
         """Test EmailAPI can be initialized"""
         api = EmailAPI()
         self.assertIsInstance(api, EmailAPI)
+        
+    @patch('weather_app.email_client.send_mail')
+    def test_email_sending(self, mock_send_mail):
+        """Test email sending logic - mocking Django's send_mail"""
+        mock_send_mail.return_value = True
+        
+        api = EmailAPI()
+        result = api.send_message(
+            email_address='test@example.com',
+            message='Test message',
+            subject='Test Subject'
+        )
+        
+        # Verify your email client called Django's send_mail
+        mock_send_mail.assert_called_once()
+        self.assertTrue(result['success'])
+
+class ModelTestCase(TestCase):
+    """Test models work correctly"""
+    
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username='modeltest',
+            email='model@example.com',
+            password='testpass123'
+        )
+    
+    def test_email_message_str_method(self):
+        """Test EmailMessage string representation"""
+        message = EmailMessage.objects.create(
+            user=self.user,
+            message_type='morning_forecast',
+            temperature=20.5,
+            location='San Francisco',
+            delivery_status='sent'
+        )
+        expected_str = f"{self.user.username} - morning_forecast - {message.timestamp}"
+        self.assertEqual(str(message), expected_str)
+    
+    def test_celery_weather_request_str_method(self):
+        """Test CeleryWeatherRequest string representation"""
+        request = CeleryWeatherRequest.objects.create(
+            user=self.user,
+            location='New York',
+            message_type='temp_alert',
+            status='pending'
+        )
+        expected_str = f"{self.user.username} - New York - pending"
+        self.assertEqual(str(request), expected_str)
+
 
