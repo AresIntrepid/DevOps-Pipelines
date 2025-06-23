@@ -13,14 +13,12 @@ import os
 from pathlib import Path
 from celery.schedules import crontab
 
+# Load environment variables from .env if present
 try:
     from dotenv import load_dotenv #only load if available
     load_dotenv()
 except ImportError:
     pass #continue without 
-
-# Load environment variables from .env if present
-load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
