@@ -20,7 +20,6 @@ A robust, production-ready Django web application for real-time weather monitori
 - [Project Structure](#project-structure)
 - [Key Files & Modules](#key-files--modules)
 - [API Endpoints](#api-endpoints)
-- [License](#license)
 
 ---
 
