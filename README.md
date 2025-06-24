@@ -1,6 +1,6 @@
 # Weather Project
 
-A robust, production-ready Django web application for real-time weather monitoring, analytics, and alerting. Features include weather data caching, user activity tracking, email notifications, a monitoring dashboard, and background processing with Celery and Redis.
+A robust, production-ready Django web application for real-time weather monitoring, analytics, and alerting. Features include weather data caching, user activity tracking, email notifications, a monitoring dashboard, and background processing with Celery, RabbitMQ, and Redis.
 
 ---
 
@@ -50,7 +50,8 @@ graph TD
     G -->|SMTP| H[Gmail/SMTP]
     B -->|Dashboard| I[Dashboard.html]
     B -->|Celery Tasks| J[Celery Worker]
-    J -->|Queue| E
+    J -->|Broker| K[RabbitMQ]
+    J -->|Queue/Cache| E
     J -->|DB| F
 ```
 
@@ -61,7 +62,8 @@ graph TD
 - **Backend**: Django 5.2, Celery 5.3
 - **Frontend**: Django Templates (HTML/CSS)
 - **Database**: PostgreSQL
-- **Cache/Queue**: Redis
+- **Cache/Result Backend**: Redis
+- **Celery Broker**: RabbitMQ (default, via `amqp://`)
 - **Email**: SMTP (Gmail or custom)
 - **Testing**: Django TestCase, unittest.mock
 
@@ -80,11 +82,28 @@ graph TD
    pip install -r requirements.txt
    ```
 
-3. **Configure environment variables**
+3. **Set up RabbitMQ**
+   - Install and start RabbitMQ (see [RabbitMQ installation guide](https://www.rabbitmq.com/download.html))
+   - By default, Celery will connect to RabbitMQ at `amqp://localhost`. You can change this with the `CELERY_BROKER_URL` environment variable.
+   - Example (default):
+     ```env
+     CELERY_BROKER_URL=amqp://localhost
+     ```
+
+4. **Set up Redis**
+   - Install and start Redis (see [Redis installation guide](https://redis.io/download))
+   - Used for Django cache, rate limiting, and as the Celery result backend.
+   - Example (default):
+     ```env
+     REDIS_URL=redis://localhost:6379/0
+     CELERY_RESULT_BACKEND=redis://localhost:6379
+     ```
+
+5. **Configure environment variables**
 
    Create a `.env` file in the root directory with the following (example):
 
-   ```
+   ```env
    DJANGO_SECRET_KEY=your-secret-key
    DJANGO_DEBUG=True
    DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1
@@ -105,21 +124,25 @@ graph TD
    EMAIL_HOST_USER=your_email@gmail.com
    EMAIL_HOST_PASSWORD=your_email_password
    DEFAULT_FROM_EMAIL=your_email@gmail.com
+   CELERY_BROKER_URL=amqp://localhost
+   CELERY_RESULT_BACKEND=redis://localhost:6379
    ```
 
-4. **Apply migrations**
+6. **Apply migrations**
    ```bash
    python manage.py migrate
    ```
 
-5. **Run Redis and Celery**
+7. **Run Redis and RabbitMQ**
    - Start Redis server (if not already running)
-   - Start Celery worker:
-     ```bash
-     celery -A weather_project worker --loglevel=info
-     ```
+   - Start RabbitMQ server (if not already running)
 
-6. **Run the Django server**
+8. **Run Celery worker**
+   ```bash
+   celery -A weather_project worker --loglevel=info
+   ```
+
+9. **Run the Django server**
    ```bash
    python manage.py runserver
    ```
@@ -129,7 +152,8 @@ graph TD
 ## Configuration
 
 - **Database**: PostgreSQL (see `weather_project/settings.py`)
-- **Cache**: Redis (used for weather data, rate limiting, and Celery broker)
+- **Cache**: Redis (used for weather data, rate limiting, and Celery result backend)
+- **Celery Broker**: RabbitMQ (default, via `amqp://localhost`)
 - **Email**: SMTP (configurable via environment variables)
 - **Weather API**: Requires a WeatherAPI key
 
