@@ -38,7 +38,8 @@ A robust, production-ready Django web application for real-time weather monitori
 
 ## Architecture Overview
 
-[View WhatsAppMessageAutomation.excalidraw](https://excalidraw.com/#json=https://raw.githubusercontent.com/AresIntrepid/DevOps-Pipelines/main/diagrams/WhatsAppMessageAutomation.excalidraw)
+[View WhatsApp Message Automation Diagram](https://excalidraw.com/#json=https://raw.githubusercontent.com/AresIntrepid/DevOps-Pipelines/main/diagrams/WhatsApp%20Message%20Automation.excalidraw)
+
 
 [View systemdesign_v3.excalidraw](https://excalidraw.com/#json=https://raw.githubusercontent.com/AresIntrepid/DevOps-Pipelines/main/diagrams/systemdesign_v3.excalidraw)
 
