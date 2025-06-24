@@ -40,11 +40,11 @@ A robust, production-ready Django web application for real-time weather monitori
 
 ### WhatsApp Message Automation Diagram
 
-![WhatsApp Diagram](diagrams/WhatsAppMessageAutomation.svg)
+![WhatsApp Diagram](diagrams/whatsapp_message_automation.svg)
 
 ### System Design v3 Diagram
 
-![System Design Diagram](diagrams/systemdesign_v3.svg)
+![System Design Diagram](diagrams/systemdesign_final.svg)
 
 
 ```mermaid
