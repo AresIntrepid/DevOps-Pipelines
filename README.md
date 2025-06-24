@@ -44,7 +44,7 @@ A production-ready Django weather application with advanced message queuing, int
 
 ### Performance & Scaling
 - **Rate Limiting** - 10 requests/minute per IP with visual indicators
-- **Cache Hit Tracking** - "Fresh from API" vs "⚡ From Cache" labels
+- **Cache Hit Tracking** - "Fresh from API" vs "From Cache" labels
 - **Multi-Database Redis** - Separated cache, sessions, and task storage
 - **Priority Queuing** - High-priority alerts for significant temperature changes
 - **Background Processing** - Non-blocking weather updates and notifications
