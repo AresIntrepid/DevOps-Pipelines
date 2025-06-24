@@ -63,7 +63,7 @@ graph TD
 - **Frontend**: Django Templates (HTML/CSS)
 - **Database**: PostgreSQL
 - **Cache/Result Backend**: Redis
-- **Celery Broker**: RabbitMQ (default, via `amqp://`)
+- **Celery Broker**: RabbitMQ
 - **Email**: SMTP (Gmail or custom)
 - **Testing**: Django TestCase, unittest.mock
 
