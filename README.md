@@ -38,10 +38,9 @@ A robust, production-ready Django web application for real-time weather monitori
 
 ## Architecture Overview
 
-[View WhatsApp Message Automation Diagram](https://github.com/AresIntrepid/DevOps-Pipelines/blob/800ee1d9eb7335eabd8e5bdeab6592d2d5a7e39f/diagrams/WhatsApp%20Message%20Automation.excalidraw)
-
-
 [View systemdesign_v3.excalidraw](https://excalidraw.com/#json=https://raw.githubusercontent.com/AresIntrepid/DevOps-Pipelines/main/diagrams/systemdesign_v3.excalidraw)
+
+[View WhatsApp Message Automation Diagram](https://excalidraw.com/#json=https://raw.githubusercontent.com/AresIntrepid/DevOps-Pipelines/main/diagrams/WhatsAppMessageAutomation.excalidraw)
 
 ```mermaid
 graph TD
